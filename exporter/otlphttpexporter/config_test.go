@@ -45,6 +45,27 @@ func TestUnmarshalConfig(t *testing.T) {
 	require.NoError(t, err)
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
+
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Headers = map[string]string{
+		"can you have a . here?": "F0000000-0000-0000-0000-000000000000",
+		"header1":                "234",
+		"another":                "somevalue",
+	}
+	expectedHTTPConfig.Endpoint = "https://1.2.3.4:1234"
+	expectedHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile:   "/var/lib/mycert.pem",
+			CertFile: "certfile",
+			KeyFile:  "keyfile",
+		},
+		Insecure: true,
+	}
+	expectedHTTPConfig.ReadBufferSize = 123
+	expectedHTTPConfig.WriteBufferSize = 345
+	expectedHTTPConfig.Timeout = time.Second * 10
+	expectedHTTPConfig.Compression = "gzip"
+
 	assert.NoError(t, component.UnmarshalExporterConfig(cm, cfg))
 	assert.Equal(t,
 		&Config{
@@ -60,25 +81,6 @@ func TestUnmarshalConfig(t *testing.T) {
 				NumConsumers: 2,
 				QueueSize:    10,
 			},
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Headers: map[string]string{
-					"can you have a . here?": "F0000000-0000-0000-0000-000000000000",
-					"header1":                "234",
-					"another":                "somevalue",
-				},
-				Endpoint: "https://1.2.3.4:1234",
-				TLSSetting: configtls.TLSClientSetting{
-					TLSSetting: configtls.TLSSetting{
-						CAFile:   "/var/lib/mycert.pem",
-						CertFile: "certfile",
-						KeyFile:  "keyfile",
-					},
-					Insecure: true,
-				},
-				ReadBufferSize:  123,
-				WriteBufferSize: 345,
-				Timeout:         time.Second * 10,
-				Compression:     "gzip",
-			},
+			HTTPClientSettings: expectedHTTPConfig,
 		}, cfg)
 }
